@@ -1,0 +1,153 @@
+////+++++++++++++++++++++++++++++++++++++| LIBRARIES / HEADERS |+++++++++++++++++++++++++++++++++++++
+#include "device_config.h"
+#include <stdint.h>
+#include <math.h>
+
+//+++++++++++++++++++++++++++++++++++++| DIRECTIVES |+++++++++++++++++++++++++++++++++++++
+#define _XTAL_FREQ 8000000
+#define SWEEP_FREQ 20
+
+//+++++++++++++++++++++++++++++++++++++| DATA TYPES |+++++++++++++++++++++++++++++++++++++
+enum por_ACDC {digital, analog};          // digital = 0, analog = 1
+
+////+++++++++++++++++++++++++++++++++++++| ISRs |+++++++++++++++++++++++++++++++++++++
+//// ISR for high priority
+//void __interrupt ( high_priority ) high_isr( void );
+//// ISR for low priority
+//void __interrupt ( low_priority ) low_isr( void ); 
+
+//+++++++++++++++++++++++++++++++++++++| FUNCTION DECLARATIONS |+++++++++++++++++++++++++++++++++++++
+void portsInit(void);
+uint8_t char_to_seg(uint8_t);
+void send_to_disp(uint32_t);
+char key_scanner(void);
+//+++++++++++++++++++++++++++++++++++++| MAIN |+++++++++++++++++++++++++++++++++++++
+void main(void){
+   
+   
+    portsInit();
+    while(1){
+        char key = key_scanner();
+        
+   
+        if (key==0) {
+            LATD = 0b11000000; 
+        }
+        else if (key==1) {
+            LATD = 0b11111001;
+        }
+        else if (key==2) {
+            LATD = 0b10100100;
+        }
+        else if (key==3) {
+            LATD = 0b10110000;
+        }
+        else if (key==4) {
+            LATD = 0b10011001;
+        }
+        else if (key==5) {
+            LATD = 0b10010010;
+        }
+        else if (key==6) {
+            LATD = 0b10000010;
+        }
+        else if (key==7) {
+            LATD = 0b11111000;
+        }
+        else if (key==8) {
+            LATD = 0b10000000;
+        }
+        else if (key==9) {
+            LATD = 0b10011000;
+        }
+        else if (key==10) {
+            LATD = 0b10001000;
+        }
+        else if (key==11) {
+            LATD = 0b10000011;
+        }
+        else if (key==12) {
+            LATD = 0b10100111;
+        }
+        else if (key==13) {
+            LATD = 0b10100001;
+        }
+        else if (key==14) {
+            LATD = 0b10000110;
+        }
+        else if (key==15) {
+            LATD = 0b10001110;
+        }
+          
+    }     
+            
+          
+            
+            
+            
+            
+}
+
+//+++++++++++++++++++++++++++++++++++++| FUNCTIONS |+++++++++++++++++++++++++++++++++++++
+void portsInit(void){
+    ANSELA = digital;   // Set port A as Digital for keypad driving
+    TRISA  = 0xF0;      // For Port A, set pins 4 to 7 as inputs (columns), and pins 0 to 3 as outputs (rows)
+    ANSELB = digital;   // Set port B as Digital for 7 segment cathode selection (only 4 pins used)  
+    TRISB  = 0x00;      // For Port B, set pins as outputs for cathode selection
+    ANSELD = digital;   // Set port D as Digital for 7 segment anodes
+    TRISD  = 0x00;      // for Port D, set all pins as outputs for 7 segment anodes
+    OSCCON = 0x74;      // Set the internal oscillator to 8MHz and stable
+}
+
+
+char key_scanner(void){
+    LATAbits.LA0 = 0;
+    LATAbits.LA1 = 1;
+    LATAbits.LA2 = 1;
+    LATAbits.LA3 = 1;
+    __delay_ms(SWEEP_FREQ);
+    if      (PORTAbits.RA4 == 0) {__delay_ms(SWEEP_FREQ); return 1;}
+    else if (PORTAbits.RA5 == 0) {__delay_ms(SWEEP_FREQ); return 2;}
+    else if (PORTAbits.RA6 == 0) {__delay_ms(SWEEP_FREQ); return 3;}
+    else if (PORTAbits.RA7 == 0) {__delay_ms(SWEEP_FREQ); return 10;}
+    LATAbits.LA0 = 1;
+    LATAbits.LA1 = 0;
+    LATAbits.LA2 = 1;
+    LATAbits.LA3 = 1;
+    __delay_ms(SWEEP_FREQ);
+    if      (PORTAbits.RA4 == 0) {__delay_ms(SWEEP_FREQ); return 4;}
+    else if (PORTAbits.RA5 == 0) {__delay_ms(SWEEP_FREQ); return 5;}
+    else if (PORTAbits.RA6 == 0) {__delay_ms(SWEEP_FREQ); return 6;}
+    else if (PORTAbits.RA7 == 0) {__delay_ms(SWEEP_FREQ); return 11;}
+    LATAbits.LA0 = 1;
+    LATAbits.LA1 = 1;
+    LATAbits.LA2 = 0;
+    LATAbits.LA3 = 1;
+    __delay_ms(SWEEP_FREQ);
+    if      (PORTAbits.RA4 == 0) {__delay_ms(SWEEP_FREQ); return 7;}
+    else if (PORTAbits.RA5 == 0) {__delay_ms(SWEEP_FREQ); return 8;}
+    else if (PORTAbits.RA6 == 0) {__delay_ms(SWEEP_FREQ); return 9;}
+    else if (PORTAbits.RA7 == 0) {__delay_ms(SWEEP_FREQ); return 12;}
+    LATAbits.LA0 = 1;
+    LATAbits.LA1 = 1;
+    LATAbits.LA2 = 1;
+    LATAbits.LA3 = 0;
+    __delay_ms(SWEEP_FREQ);
+    if      (PORTAbits.RA4 == 0) {__delay_ms(SWEEP_FREQ); return 14;}
+    else if (PORTAbits.RA5 == 0) {__delay_ms(SWEEP_FREQ); return 0;}
+    else if (PORTAbits.RA6 == 0) {__delay_ms(SWEEP_FREQ); return 15;}
+    else if (PORTAbits.RA7 == 0) {__delay_ms(SWEEP_FREQ); return 13;}   
+    else return 'x';
+}
+
+void send_to_disp(uint32_t disp_word){
+    for (char i = 0; i < 4; i++){
+        int internal_sweep = (int) pow(2, i);
+        int sweep = 0x0F & ~internal_sweep;
+        LATB = (char) ~sweep;
+        uint8_t num_disp = 0x000000FF & (disp_word >> i*8);
+        LATD = char_to_seg(num_disp);
+        __delay_ms(SWEEP_FREQ);
+    }
+}
+
